@@ -8,6 +8,8 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.FogRenderer;
 
 import net.neoforged.neoforge.client.event.ModelEvent;
+import net.povstalec.sgjourney.client.models.block_entity.AbstractDHDModel;
+import net.povstalec.sgjourney.client.render.block_entity.*;
 import net.povstalec.sgjourney.client.render.entity.AnthropoidRenderer;
 import net.povstalec.sgjourney.client.render.entity.GoauldRenderer;
 import net.povstalec.sgjourney.common.capabilities.GoauldHost;
@@ -51,14 +53,6 @@ import net.povstalec.sgjourney.client.render.entity.PlasmaProjectileRenderer;
 import net.povstalec.sgjourney.client.render.level.SGJourneyDimensionSpecialEffects;
 import net.povstalec.sgjourney.client.resourcepack.ResourcepackReloadListener;
 import net.povstalec.sgjourney.client.models.block.CableModelLoader;
-import net.povstalec.sgjourney.client.render.block_entity.CartoucheRenderer;
-import net.povstalec.sgjourney.client.render.block_entity.ClassicStargateRenderer;
-import net.povstalec.sgjourney.client.render.block_entity.MilkyWayStargateRenderer;
-import net.povstalec.sgjourney.client.render.block_entity.PegasusStargateRenderer;
-import net.povstalec.sgjourney.client.render.block_entity.SymbolBlockRenderer;
-import net.povstalec.sgjourney.client.render.block_entity.TollanStargateRenderer;
-import net.povstalec.sgjourney.client.render.block_entity.TransportRingsRenderer;
-import net.povstalec.sgjourney.client.render.block_entity.UniverseStargateRenderer;
 import net.povstalec.sgjourney.client.screens.config.ConfigScreen;
 import net.povstalec.sgjourney.common.capabilities.AncientGene;
 import net.povstalec.sgjourney.common.capabilities.BloodstreamNaquadah;
@@ -89,6 +83,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
 import javax.annotation.Nullable;
@@ -103,12 +98,12 @@ public class StargateJourney
     public static final String STELLAR_VIEW_MODID = "stellarview";
     public static final String IRIS_MODID = "iris";
     public static final String COMPUTERCRAFT_MODID = "computercraft";
-    
-	@Nullable
-	private static Boolean isStellarViewLoaded = null;
-	@Nullable
+
+    @Nullable
+    private static Boolean isStellarViewLoaded = null;
+    @Nullable
     private static Boolean isIrisLoaded = null;
-    
+
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public StargateJourney(IEventBus eventBus, ModContainer modContainer, Dist dist)
@@ -129,15 +124,15 @@ public class StargateJourney
         TabInit.register(eventBus);
         RecipeTypeInit.register(eventBus);
         StatisticsInit.register(eventBus);
-		CommandInit.register(eventBus);
-		StructurePlacementInit.register(eventBus);
+        CommandInit.register(eventBus);
+        StructurePlacementInit.register(eventBus);
 
         GalaxyInit.register(eventBus);
-    
+
         AdvancementInit.register(eventBus);
-        
+
         AttachmentTypeInit.register(eventBus);
-    
+
         eventBus.addListener((DataPackRegistryEvent.NewRegistry event) ->
         {
             event.dataPackRegistry(SymbolSet.REGISTRY_KEY, SymbolSet.CODEC, SymbolSet.CODEC);
@@ -148,7 +143,7 @@ public class StargateJourney
             event.dataPackRegistry(AddressTable.REGISTRY_KEY, AddressTable.CODEC, AddressTable.CODEC);
             event.dataPackRegistry(StargateVariant.REGISTRY_KEY, StargateVariant.CODEC, StargateVariant.CODEC);
         });
-        
+
         eventBus.addListener(StargateJourney::onRegisterCapabilities);
         eventBus.addListener(GalaxyInit::registerRegistries);
         eventBus.addListener(this::commonSetup);
@@ -158,161 +153,159 @@ public class StargateJourney
 
         modContainer.registerConfig(ModConfig.Type.CLIENT, StargateJourneyConfig.CLIENT_CONFIG, "sgjourney-client.toml");
         modContainer.registerConfig(ModConfig.Type.COMMON, StargateJourneyConfig.COMMON_CONFIG, "sgjourney-common.toml");
-        
+
         if(dist.isClient())
             ConfigScreen.registerConfigScreen(modContainer);
 
-        //NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.addListener(MiscInit::registerCommands);
     }
-    
+
     private void commonSetup(final FMLCommonSetupEvent event)
     {
         event.enqueueWork(() ->
         {
             StatisticsInit.register();
-            //VillagerInit.registerPOIs();
-            
+
             StargateInit.register();
             TransporterInit.register();
         });
     }
-    
+
     public static void onRegisterCapabilities(RegisterCapabilitiesEvent event)
     {
         // Item Capabilities
-        
+
         // Energy
         event.registerItem(Capabilities.EnergyStorage.ITEM, (stack, context) -> new EnergyCrystalItem.Energy(stack), ItemInit.ENERGY_CRYSTAL, ItemInit.ENERGY_CRYSTAL);
         event.registerItem(Capabilities.EnergyStorage.ITEM, (stack, context) -> new EnergyCrystalItem.Energy(stack), ItemInit.ENERGY_CRYSTAL, ItemInit.ADVANCED_ENERGY_CRYSTAL);
         event.registerItem(Capabilities.EnergyStorage.ITEM, (stack, context) -> new PowerCellItem.Energy(stack), ItemInit.NAQUADAH_POWER_CELL);
         event.registerItem(Capabilities.EnergyStorage.ITEM, (stack, context) -> new ZeroPointModule.Energy(stack), ItemInit.ZPM);
-        
+
         // Items
         event.registerItem(Capabilities.ItemHandler.ITEM, (stack, context) -> new RingRemoteItem.ItemHandler(stack, DataComponents.CONTAINER), ItemInit.RING_REMOTE);
         event.registerItem(Capabilities.ItemHandler.ITEM, (stack, context) -> new StaffWeaponItem.FluidItemHandler(stack, DataComponents.CONTAINER), ItemInit.MATOK);
         event.registerItem(Capabilities.ItemHandler.ITEM, (stack, context) -> new PowerCellItem.FluidItemHandler(stack, DataComponents.CONTAINER), ItemInit.NAQUADAH_POWER_CELL);
-        
+
         // Fluids
         event.registerItem(Capabilities.FluidHandler.ITEM, (stack, context) -> new StaffWeaponItem.FluidItemHandler(stack, DataComponents.CONTAINER), ItemInit.MATOK);
         event.registerItem(Capabilities.FluidHandler.ITEM, (stack, context) -> new VialItem.FluidHandler(() -> DataComponentInit.FLUID.get(), stack), ItemInit.VIAL);
         event.registerItem(Capabilities.FluidHandler.ITEM, (stack, context) -> new PowerCellItem.FluidItemHandler(stack, DataComponents.CONTAINER), ItemInit.NAQUADAH_POWER_CELL);
         event.registerItem(Capabilities.FluidHandler.ITEM, (stack, context) -> new PersonalShieldItem.FluidHandler(() -> DataComponentInit.FLUID.get(), stack), ItemInit.PERSONAL_SHIELD_EMITTER);
-        
-        
-        
-        
+
+
+
+
         // Block Entity Capabilities
-        
+
         // Energy
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.UNIVERSE_STARGATE.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.MILKY_WAY_STARGATE.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.PEGASUS_STARGATE.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.TOLLAN_STARGATE.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.CLASSIC_STARGATE.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
-        
+
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.MILKY_WAY_DHD.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.PEGASUS_DHD.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.CLASSIC_DHD.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
-        
+
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.TRANSPORT_RINGS.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
-        
+
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.NAQUADAH_GENERATOR_MARK_I.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.NAQUADAH_GENERATOR_MARK_II.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
-        
+
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.BASIC_INTERFACE.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.CRYSTAL_INTERFACE.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.ADVANCED_CRYSTAL_INTERFACE.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
-        
+
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.ZPM_HUB.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
-        
+
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.NAQUADAH_WIRE.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.SMALL_NAQUADAH_CABLE.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.MEDIUM_NAQUADAH_CABLE.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.LARGE_NAQUADAH_CABLE.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
-        
+
         event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, BlockEntityInit.LARGE_NAQUADAH_BATTERY.get(), (blockEntity, direction) -> blockEntity.getEnergyHandler(direction));
-        
+
         // Items
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, BlockEntityInit.CLASSIC_DHD.get(), (blockEntity, direction) -> blockEntity.getItemHandler(direction));
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, BlockEntityInit.MILKY_WAY_DHD.get(), (blockEntity, direction) -> blockEntity.getItemHandler(direction));
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, BlockEntityInit.PEGASUS_DHD.get(), (blockEntity, direction) -> blockEntity.getItemHandler(direction));
-        
+
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, BlockEntityInit.CRYSTALLIZER.get(), (blockEntity, direction) -> blockEntity.getItemHandler(direction));
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, BlockEntityInit.ADVANCED_CRYSTALLIZER.get(), (blockEntity, direction) -> blockEntity.getItemHandler(direction));
-        
+
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, BlockEntityInit.NAQUADAH_LIQUIDIZER.get(), (blockEntity, direction) -> blockEntity.getItemHandler(direction));
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, BlockEntityInit.HEAVY_NAQUADAH_LIQUIDIZER.get(), (blockEntity, direction) -> blockEntity.getItemHandler(direction));
-        
+
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, BlockEntityInit.RING_PANEL.get(), (blockEntity, direction) -> blockEntity.getItemHandler(direction));
-        
+
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, BlockEntityInit.ZPM_HUB.get(), (blockEntity, direction) -> blockEntity.getItemHandler(direction));
-        
+
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, BlockEntityInit.NAQUADAH_GENERATOR_MARK_I.get(), (blockEntity, direction) -> blockEntity.getItemHandler(direction));
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, BlockEntityInit.NAQUADAH_GENERATOR_MARK_II.get(), (blockEntity, direction) -> blockEntity.getItemHandler(direction));
-        
+
         // Fluids
         event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, BlockEntityInit.CRYSTALLIZER.get(), (blockEntity, direction) -> blockEntity.getFluidHandler(direction));
         event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, BlockEntityInit.ADVANCED_CRYSTALLIZER.get(), (blockEntity, direction) -> blockEntity.getFluidHandler(direction));
-        
+
         event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, BlockEntityInit.NAQUADAH_LIQUIDIZER.get(), (blockEntity, direction) -> blockEntity.getFluidHandler(direction));
         event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, BlockEntityInit.HEAVY_NAQUADAH_LIQUIDIZER.get(), (blockEntity, direction) -> blockEntity.getFluidHandler(direction));
-        
+
         // ComputerCraft
         if(ModList.get().isLoaded(COMPUTERCRAFT_MODID))
             CCTweakedCompatibility.registerPeripherals(event);
-        
-        
-        
+
+
+
         // Entity Capabilities
         event.registerEntity(BloodstreamNaquadah.BLOODSTREAM_NAQUADAH_CAPABILITY, EntityType.VILLAGER, (entity, context) -> new BloodstreamNaquadah(entity));
         event.registerEntity(BloodstreamNaquadah.BLOODSTREAM_NAQUADAH_CAPABILITY, EntityType.PLAYER, (entity, context) -> new BloodstreamNaquadah(entity));
-        
+
         event.registerEntity(AncientGene.ANCIENT_GENE_CAPABILITY, EntityType.VILLAGER, (entity, context) -> new AncientGene(entity));
         event.registerEntity(AncientGene.ANCIENT_GENE_CAPABILITY, EntityType.PLAYER, (entity, context) -> new AncientGene(entity));
-        
+
         event.registerEntity(GoauldHost.GOAULD_HOST_CAPABILITY, EntityType.VILLAGER, (entity, context) -> new GoauldHost(entity));
         event.registerEntity(GoauldHost.GOAULD_HOST_CAPABILITY, EntityType.PLAYER, (entity, context) -> new GoauldHost(entity));
     }
-	
-	public static boolean isStellarViewLoaded()
-	{
-		if(isStellarViewLoaded == null)
-			isStellarViewLoaded = ModList.get().isLoaded(STELLAR_VIEW_MODID);
-		
-		return isStellarViewLoaded;
-	}
-    
+
+    public static boolean isStellarViewLoaded()
+    {
+        if(isStellarViewLoaded == null)
+            isStellarViewLoaded = ModList.get().isLoaded(STELLAR_VIEW_MODID);
+
+        return isStellarViewLoaded;
+    }
+
     // BECAUSE OCULUS MESSES WITH RENDERING TOO MUCH
     public static boolean isIrisLoaded()
     {
         if(isIrisLoaded == null)
             isIrisLoaded = ModList.get().isLoaded(IRIS_MODID);
-        
+
         return isIrisLoaded;
     }
-	
-	public static boolean shouldRenderAMD()
-	{
-		if(isIrisLoaded())
-			return false;
-		
-		if(ClientStargateConfig.render_amd.get() == RenderAMD.AUTO)
-			return SystemUtils.IS_OS_LINUX;
-		
-		return ClientStargateConfig.render_amd.get() == RenderAMD.ENABLED;
-	}
-    
+
+    public static boolean shouldRenderAMD()
+    {
+        if(isIrisLoaded())
+            return false;
+
+        if(ClientStargateConfig.render_amd.get() == RenderAMD.AUTO)
+            return SystemUtils.IS_OS_LINUX;
+
+        return ClientStargateConfig.render_amd.get() == RenderAMD.ENABLED;
+    }
+
     @EventBusSubscriber(modid = StargateJourney.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents
     {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {
-        	ItemProperties.register(ItemInit.VIAL.get(), sgjourneyLocation("liquid_naquadah"), new FluidPropertyFunction());
-			ItemProperties.register(ItemInit.NAQUADAH_POWER_CELL.get(), sgjourneyLocation("liquid_naquadah"), new FluidPropertyFunction());
-        	ItemProperties.register(ItemInit.MATOK.get(), sgjourneyLocation("open"), new WeaponStatePropertyFunction());
-        	
+            ItemProperties.register(ItemInit.VIAL.get(), sgjourneyLocation("liquid_naquadah"), new FluidPropertyFunction());
+            ItemProperties.register(ItemInit.NAQUADAH_POWER_CELL.get(), sgjourneyLocation("liquid_naquadah"), new FluidPropertyFunction());
+            ItemProperties.register(ItemInit.MATOK.get(), sgjourneyLocation("open"), new WeaponStatePropertyFunction());
+
             ItemBlockRenderTypes.setRenderLayer(FluidInit.LIQUID_NAQUADAH_SOURCE.get(), RenderType.translucent());
             ItemBlockRenderTypes.setRenderLayer(FluidInit.LIQUID_NAQUADAH_FLOWING.get(), RenderType.translucent());
             ItemBlockRenderTypes.setRenderLayer(FluidInit.HEAVY_LIQUID_NAQUADAH_SOURCE.get(), RenderType.translucent());
@@ -322,22 +315,32 @@ public class StargateJourney
             EntityRenderers.register(EntityInit.GOAULD.get(), GoauldRenderer::new);
             EntityRenderers.register(EntityInit.HUMAN.get(), AnthropoidRenderer<Human>::new);
             EntityRenderers.register(EntityInit.JAFFA.get(), AnthropoidRenderer<Jaffa>::new);
-            
+
             BlockEntityRenderers.register(BlockEntityInit.SANDSTONE_CARTOUCHE.get(), CartoucheRenderer.Sandstone::new);
             BlockEntityRenderers.register(BlockEntityInit.RED_SANDSTONE_CARTOUCHE.get(), CartoucheRenderer.RedSandstone::new);
             BlockEntityRenderers.register(BlockEntityInit.STONE_CARTOUCHE.get(), CartoucheRenderer.Stone::new);
-            
+
             BlockEntityRenderers.register(BlockEntityInit.SANDSTONE_SYMBOL.get(), SymbolBlockRenderer.Sandstone::new);
             BlockEntityRenderers.register(BlockEntityInit.RED_SANDSTONE_SYMBOL.get(), SymbolBlockRenderer.RedSandstone::new);
             BlockEntityRenderers.register(BlockEntityInit.STONE_SYMBOL.get(), SymbolBlockRenderer.Stone::new);
-            
+
             BlockEntityRenderers.register(BlockEntityInit.TRANSPORT_RINGS.get(), TransportRingsRenderer::new);
-            
+
             BlockEntityRenderers.register(BlockEntityInit.UNIVERSE_STARGATE.get(), UniverseStargateRenderer::new);
             BlockEntityRenderers.register(BlockEntityInit.MILKY_WAY_STARGATE.get(), MilkyWayStargateRenderer::new);
             BlockEntityRenderers.register(BlockEntityInit.PEGASUS_STARGATE.get(), PegasusStargateRenderer::new);
             BlockEntityRenderers.register(BlockEntityInit.CLASSIC_STARGATE.get(), ClassicStargateRenderer::new);
             BlockEntityRenderers.register(BlockEntityInit.TOLLAN_STARGATE.get(), TollanStargateRenderer::new);
+
+            BlockEntityRenderers.register(BlockEntityInit.MILKY_WAY_DHD.get(), MilkyWayDHDRenderer::new);
+            BlockEntityRenderers.register(BlockEntityInit.PEGASUS_DHD.get(), PegasusDHDRenderer::new);
+        }
+
+        @SubscribeEvent
+        public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event)
+        {
+            // Register the DHD model layer definition
+            event.registerLayerDefinition(AbstractDHDModel.LAYER_LOCATION, AbstractDHDModel::createBodyLayer);
         }
 
         @SubscribeEvent
@@ -353,15 +356,15 @@ public class StargateJourney
             event.register(MenuInit.CLASSIC_DHD.get(), ClassicDHDScreen::new);
 
             event.register(MenuInit.NAQUADAH_GENERATOR.get(), NaquadahGeneratorScreen::new);
-            
+
             event.register(MenuInit.ZPM_HUB.get(), ZPMHubScreen::new);
-            
+
             event.register(MenuInit.NAQUADAH_LIQUIDIZER.get(), LiquidizerScreen.LiquidNaquadah::new);
             event.register(MenuInit.HEAVY_NAQUADAH_LIQUIDIZER.get(), LiquidizerScreen.HeavyLiquidNaquadah::new);
             event.register(MenuInit.CRYSTALLIZER.get(), CrystallizerScreen::new);
 
             event.register(MenuInit.TRANSCEIVER.get(), TransceiverScreen::new);
-            
+
             event.register(MenuInit.NAQUADAH_BATTERY.get(), BatteryScreen::new);
         }
 
@@ -376,7 +379,7 @@ public class StargateJourney
                     return JackalArmorRenderProperties.INSTANCE.getHumanoidArmorModel(livingEntity, itemStack, equipmentSlot, original);
                 }
             }, ItemInit.JACKAL_HELMET);
-            
+
             event.registerItem(new IClientItemExtensions()
             {
                 public HumanoidModel<?> getHumanoidArmorModel(LivingEntity livingEntity, ItemStack itemStack, EquipmentSlot equipmentSlot, HumanoidModel<?> original)
@@ -384,9 +387,9 @@ public class StargateJourney
                     return FalconArmorRenderProperties.INSTANCE.getHumanoidArmorModel(livingEntity, itemStack, equipmentSlot, original);
                 }
             }, ItemInit.FALCON_HELMET);
-            
-            
-            
+
+
+
             // Fluids
             event.registerFluidType(new IClientFluidTypeExtensions()
             {
@@ -468,24 +471,24 @@ public class StargateJourney
                 }
             }, FluidTypeInit.HEAVY_LIQUID_NAQUADAH_FLUID_TYPE.get());
         }
-        
+
         @SubscribeEvent
         public static void registerDimensionEffects(RegisterDimensionSpecialEffectsEvent event)
         {
-        	SGJourneyDimensionSpecialEffects.registerStargateJourneyEffects(event);
+            SGJourneyDimensionSpecialEffects.registerStargateJourneyEffects(event);
         }
-        
+
         @SubscribeEvent
         public static void registerClientReloadListener(RegisterClientReloadListenersEvent event)
         {
             ResourcepackReloadListener.ReloadListener.registerReloadListener(event);
         }
-		
-		@SubscribeEvent
-		public static void modelLoaderInit(ModelEvent.RegisterGeometryLoaders event)
-		{
-			CableModelLoader.register(event);
-		}
+
+        @SubscribeEvent
+        public static void modelLoaderInit(ModelEvent.RegisterGeometryLoaders event)
+        {
+            CableModelLoader.register(event);
+        }
     }
 
     public static ResourceLocation location(String path)
