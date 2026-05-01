@@ -18,6 +18,8 @@ public class SoundInit
 	public static final DeferredHolder<SoundEvent, SoundEvent> WORMHOLE_IDLE = registerSoundEvent("wormhole_idle");
 
 	public static final DeferredHolder<SoundEvent, SoundEvent> IRIS_THUD = registerSoundEvent("iris_thud");
+	public static final DeferredHolder<SoundEvent, SoundEvent> IRIS_OPEN = registerSoundEvent("iris_open");
+	public static final DeferredHolder<SoundEvent, SoundEvent> IRIS_CLOSE = registerSoundEvent("iris_close");
 
 	public static final DeferredHolder<SoundEvent, SoundEvent> MILKY_WAY_DHD_ENTER = registerSoundEvent("milky_way_dhd_enter");
 	public static final DeferredHolder<SoundEvent, SoundEvent> MILKY_WAY_DHD_PRESS = registerSoundEvent("milky_way_dhd_press");

@@ -461,6 +461,22 @@
 			"sgjourney:iris_thud_4"
 		]
 	},
+	"iris_open":
+	{
+		"subtitle": "sounds.sgjourney.iris_open",
+		"sounds":
+		[
+			"sgjourney:iris_open"
+		]
+	},
+	"iris_close":
+	{
+		"subtitle": "sounds.sgjourney.iris_close",
+		"sounds":
+		[
+			"sgjourney:iris_close"
+		]
+	},
 	
 	
 	
