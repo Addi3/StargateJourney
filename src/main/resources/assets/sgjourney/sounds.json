@@ -477,6 +477,18 @@
 			"sgjourney:iris_close"
 		]
 	},
+
+
+
+
+	"ring_transporter":
+	{
+		"subtitle": "sounds.sgjourney.ring_transporter",
+		"sounds":
+		[
+			"sgjourney:ring_transporter"
+		]
+	},
 	
 	
 	

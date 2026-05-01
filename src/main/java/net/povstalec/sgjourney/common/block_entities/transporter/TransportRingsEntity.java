@@ -11,6 +11,7 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
@@ -21,6 +22,7 @@ import net.povstalec.sgjourney.common.config.StargateJourneyConfig;
 import net.povstalec.sgjourney.common.data.TransporterNetwork;
 import net.povstalec.sgjourney.common.init.BlockEntityInit;
 import net.povstalec.sgjourney.common.init.BlockInit;
+import net.povstalec.sgjourney.common.init.SoundInit;
 import net.povstalec.sgjourney.common.sgjourney.transporter.Transporter;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,76 +33,89 @@ public class TransportRingsEntity extends AbstractTransporterEntity
 	public static final String EMPTY_SPACE = "empty_space";
 	public static final String TRANSPORT_HEIGHT = "transport_height";
 	public static final String PROGRESS = "progress";
-	
+
 	public static final int MAX_TRANSPORT_HEIGHT = 16;
-	
+	public static final int ANIMATION_DURATION = 20;
+
 	@Nullable
 	private BlockPos transportPos = null;
 	public int emptySpace = 0;
 	public int transportHeight = 0;
-	
+
 	public int progress = -1;
 	public int progressOld = -1;
-	
+
 	public TransportRingsEntity(BlockPos pos, BlockState state)
 	{
 		super(BlockEntityInit.TRANSPORT_RINGS.get(), pos, state);
 	}
-	
+
 	@Override
 	public ClientboundBlockEntityDataPacket getUpdatePacket()
 	{
 		return ClientboundBlockEntityDataPacket.create(this);
 	}
-	
+
 	@Override
 	public @NotNull CompoundTag getUpdateTag(HolderLookup.Provider registries)
 	{
 		CompoundTag tag = new CompoundTag();
-		
+
 		tag.putInt(EMPTY_SPACE, emptySpace);
 		tag.putInt(TRANSPORT_HEIGHT, transportHeight);
 		tag.putInt(PROGRESS, progress);
-		
+
 		return tag;
 	}
-	
+
 	@Override
 	public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket packet, HolderLookup.Provider registries)
 	{
 		CompoundTag tag = packet.getTag();
-		
+
 		emptySpace = tag.getInt(EMPTY_SPACE);
 		transportHeight = tag.getInt(TRANSPORT_HEIGHT);
 		updateProgress(tag.getInt(PROGRESS));
 	}
-	
+
 	public void updateClient()
 	{
 		if(!level.isClientSide())
 			((ServerLevel) level).getChunkSource().blockChanged(worldPosition);
 	}
-	
+
 	@Override
 	public int getTimeOffset()
 	{
 		return getTransportHeight();
 	}
-	
+
 	//========================================================================================================
 	//**********************************************Transporting**********************************************
 	//========================================================================================================
-	
+
+	private void playTransportSound()
+	{
+		if(this.level == null || this.level.isClientSide())
+			return;
+
+		ServerLevel level = (ServerLevel) this.level;
+		BlockPos pos = this.getBlockPos();
+
+		level.playSound(null, pos, SoundInit.RING_TRANSPORTER.get(),
+				SoundSource.BLOCKS, 1.0F, 1.0F);
+	}
+
 	@Override
 	@Nullable
 	public List<Entity> entitiesToTransport()
 	{
 		AABB localBox = new AABB((transportPos.getX() - 1), (transportPos.getY()), (transportPos.getZ() - 1),
 				(transportPos.getX() + 2), (transportPos.getY() + 3), (transportPos.getZ() + 2));
-		
+
 		return this.level.getEntitiesOfClass(Entity.class, localBox);
 	}
-	
+
 	@Override
 	public BlockPos transportPos()
 	{
@@ -109,59 +124,64 @@ public class TransportRingsEntity extends AbstractTransporterEntity
 			this.emptySpace = getEmptySpace();
 			this.transportPos = new BlockPos(getBlockPos().getX(), (getBlockPos().getY() + this.emptySpace), getBlockPos().getZ());
 		}
-		
+
 		return this.transportPos;
 	}
-	
+
 	public void startTransport(Transporter target)
 	{
 		Transporter transporter = getTransporter();
-		
-		if(transporter == null) //TODO Maybe some kind of feedback when it goes wrong?
+
+		if(transporter == null)
 			return;
-		
+
 		TransporterNetwork.get(level).createConnection(level.getServer(), transporter, target);
 	}
-	
+
 	public boolean connectTransporter(UUID connectionID)
 	{
 		transportPos();
-		return super.connectTransporter(connectionID);
+		boolean result = super.connectTransporter(connectionID);
+
+		if(result && !level.isClientSide())
+		{
+			playTransportSound();
+		}
+
+		return result;
 	}
-	
+
 	public void resetTransporter()
 	{
 		this.emptySpace = 0;
 		this.transportHeight = 0;
 		this.transportPos = null;
-		
+
 		super.resetTransporter();
 	}
-	
-	
-	
+
 	public int getTransportHeight()
 	{
 		if(transportHeight == 0)
 		{
 			int emptySpace = getEmptySpace();
-			
+
 			if(emptySpace > 0)
 				transportHeight = Math.abs(emptySpace * 4) + 8;
 			else
 				transportHeight = Math.abs(emptySpace * 4);
 		}
-		
+
 		return transportHeight;
 	}
-	
+
 	@Override
 	public void updateTicks(int connectionTime)
 	{
 		this.progress = connectionTime;
 		this.progressOld = connectionTime;
 	}
-	
+
 	public static void tick(Level level, BlockPos pos, BlockState state, TransportRingsEntity rings)
 	{
 		if(rings.isConnected())
@@ -171,20 +191,19 @@ public class TransportRingsEntity extends AbstractTransporterEntity
 			rings.progress = -1;
 			rings.progressOld = -1;
 		}
-		
+
 		rings.updateClient();
 	}
-	
+
 	private void doClientProgress()
 	{
 		if(!this.level.isClientSide() || this.progress < 0)
 			return;
-		
+
 		this.progressOld = this.progress;
 		this.progress++;
 	}
-	
-	// Only updates the progress if there is none - should prevent jittering
+
 	public void updateProgress(int progress)
 	{
 		if(this.progress == -1 || progress == -1)
@@ -193,19 +212,19 @@ public class TransportRingsEntity extends AbstractTransporterEntity
 			this.progressOld = progress;
 		}
 	}
-	
+
 	public void setProgress(int progress)
 	{
 		this.progressOld = this.progress;
 		this.progress = progress;
 	}
-	
+
 	public float getProgress(float partialTick)
 	{
 		return StargateJourneyConfig.disable_smooth_animations.get() ?
 				(float) this.progress : Mth.lerp(partialTick, this.progressOld, this.progress);
 	}
-	
+
 	@Override
 	public boolean isConnected()
 	{
@@ -217,27 +236,27 @@ public class TransportRingsEntity extends AbstractTransporterEntity
 		}
 		return false;
 	}
-	
+
 	@Override
 	public void setConnected(boolean connected)
 	{
 		BlockPos pos = this.getBlockPos();
 		BlockState state = this.level.getBlockState(pos);
-		
+
 		if(state.is(BlockInit.TRANSPORT_RINGS.get()))
 			level.setBlock(pos, state.setValue(TransportRingsBlock.ACTIVATED, connected), 2);
-		
+
 		loadChunk(connected);
 	}
-	
+
 	private int getEmptySpace()
 	{
 		BlockPos pos = this.getBlockPos();
 		BlockState state = this.level.getBlockState(pos);
-		
+
 		if(!state.is(BlockInit.TRANSPORT_RINGS.get()))
 			return 0;
-		
+
 		if(state.getValue(TransportRingsBlock.FACING) == Direction.DOWN)
 		{
 			for(int i = 4; i <= 16; i++)
@@ -265,31 +284,28 @@ public class TransportRingsEntity extends AbstractTransporterEntity
 		}
 		return 0;
 	}
-	
-	
-	
+
 	@Override
 	public long capacity()
 	{
 		return 0;
 	}
-	
+
 	@Override
 	public long maxReceive()
 	{
 		return 0;
 	}
-	
+
 	@Override
 	public long maxExtract()
 	{
 		return 0;
 	}
-	
+
 	@Override
 	protected Component getDefaultName()
 	{
 		return Component.translatable("block.sgjourney.transport_rings");
 	}
-	
 }
