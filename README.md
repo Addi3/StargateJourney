@@ -8,4 +8,4 @@ SGJ: https://www.curseforge.com/minecraft/mc-mods/sgjourney https://github.com/P
 
 Reworked sgj textures: https://www.curseforge.com/minecraft/texture-packs/stargate-journey-refreshed
 
-DHD models / stargate item textures : https://ouro-theartist.carrd.co/
+DHD / stargate / zpm textures / models : https://ouro-theartist.carrd.co/
