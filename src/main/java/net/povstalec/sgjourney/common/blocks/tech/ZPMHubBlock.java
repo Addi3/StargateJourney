@@ -14,12 +14,16 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.povstalec.sgjourney.common.block_entities.ProtectedBlockEntity;
 import net.povstalec.sgjourney.common.block_entities.tech.ZPMHubEntity;
 import net.povstalec.sgjourney.common.blocks.ProtectedBlock;
@@ -31,6 +35,10 @@ public class ZPMHubBlock extends BaseEntityBlock implements ProtectedBlock
 {
 	public static final MapCodec<ZPMHubBlock> CODEC = simpleCodec(ZPMHubBlock::new);
 
+	private static final VoxelShape COLLISION_SHAPE = Block.box(2, 0, 2, 14, 16, 14);
+
+
+
 	public ZPMHubBlock(Properties properties)
 	{
 		super(properties);
@@ -41,89 +49,102 @@ public class ZPMHubBlock extends BaseEntityBlock implements ProtectedBlock
 	}
 
 	@Override
+	public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context)
+	{
+		return COLLISION_SHAPE;
+	}
+
+	@Override
+	public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context)
+	{
+		return COLLISION_SHAPE;
+	}
+
+
+	@Override
 	public BlockEntity newBlockEntity(BlockPos pos, BlockState state)
 	{
 		return new ZPMHubEntity(pos, state);
 	}
-	
+
 	public RenderShape getRenderShape(BlockState state)
 	{
 		return RenderShape.MODEL;
 	}
-	
+
 	@Override
 	public InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult)
 	{
-        if(!level.isClientSide())
-        {
-        	BlockEntity blockEntity = level.getBlockEntity(pos);
-			
-        	if(blockEntity instanceof ZPMHubEntity zpmHub)
-        	{
+		if(!level.isClientSide())
+		{
+			BlockEntity blockEntity = level.getBlockEntity(pos);
+
+			if(blockEntity instanceof ZPMHubEntity zpmHub)
+			{
 				if(!zpmHub.hasPermissions(player, true))
 					return InteractionResult.FAIL;
-				
+
 				MenuProvider containerProvider = new MenuProvider()
-        		{
-        			@Override
-        			public Component getDisplayName() 
-        			{
-        				return Component.translatable("screen.sgjourney.zpm_hub");
-        			}
-        			
-        			@Override
-        			public AbstractContainerMenu createMenu(int windowId, Inventory playerInventory, Player playerEntity) 
-        			{
-        				return new ZPMHubMenu(windowId, playerInventory, blockEntity);
-        			}
-        		};
+				{
+					@Override
+					public Component getDisplayName()
+					{
+						return Component.translatable("screen.sgjourney.zpm_hub");
+					}
+
+					@Override
+					public AbstractContainerMenu createMenu(int windowId, Inventory playerInventory, Player playerEntity)
+					{
+						return new ZPMHubMenu(windowId, playerInventory, blockEntity);
+					}
+				};
 				NetworkUtils.openMenu((ServerPlayer) player, containerProvider, blockEntity.getBlockPos());
-        	}
-        	else
-        		throw new IllegalStateException("Our named container provider is missing!");
-        }
-        return InteractionResult.SUCCESS;
-    }
-	
+			}
+			else
+				throw new IllegalStateException("Our named container provider is missing!");
+		}
+		return InteractionResult.SUCCESS;
+	}
+
 	@Override
 	public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving)
 	{
 		if (state.getBlock() != newState.getBlock())
-        {
-            BlockEntity blockEntity = level.getBlockEntity(pos);
-            
-            if (blockEntity instanceof ZPMHubEntity hub)
-            	hub.drops();
-        }
-        super.onRemove(state, level, pos, newState, isMoving);
+		{
+			BlockEntity blockEntity = level.getBlockEntity(pos);
+
+			if (blockEntity instanceof ZPMHubEntity hub)
+				hub.drops();
+		}
+		super.onRemove(state, level, pos, newState, isMoving);
 	}
-	
+
 	@Nullable
-    @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type)
+	@Override
+	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type)
 	{
 		return createTickerHelper(type, BlockEntityInit.ZPM_HUB.get(), ZPMHubEntity::tick);
-    }
-	
+	}
+
 	@Nullable
 	public ProtectedBlockEntity getProtectedBlockEntity(BlockGetter reader, BlockPos pos, BlockState state)
 	{
 		BlockEntity blockEntity = reader.getBlockEntity(pos);
-		
+
 		if(blockEntity instanceof ZPMHubEntity zpmHub)
 			return zpmHub;
-		
+
 		return null;
 	}
-	
+
 	@Override
 	public boolean hasPermissions(BlockGetter reader, BlockPos pos, BlockState state, Player player, boolean sendMessage)
 	{
 		BlockEntity blockEntity = reader.getBlockEntity(pos);
-		
+
 		if(blockEntity instanceof ZPMHubEntity zpmHub)
 			return zpmHub.hasPermissions(player, sendMessage);
-		
+
 		return true;
 	}
 }
