@@ -351,47 +351,52 @@ public abstract class AbstractStargateEntity extends EnergyBlockEntity implement
 	{
 		return ClientboundBlockEntityDataPacket.create(this);
 	}
-	
+
 	@Override
 	public @NotNull CompoundTag getUpdateTag(HolderLookup.Provider registries)
 	{
 		CompoundTag tag = new CompoundTag();
-		
+
 		tag.putLong(ENERGY, this.getEnergyStored());
-		
+
 		tag.putIntArray(ADDRESS, address.getArray());
 		tag.putIntArray(ENGAGED_CHEVRONS, engagedChevrons);
-		// Ticks
 		tag.putInt(StargateConnection.KAWOOSH_TICKS, kawooshTick);
 		tag.putInt(StargateConnection.OPEN_TIME, openTime);
 		tag.putInt(StargateConnection.TIME_SINCE_LAST_TRAVELER, timeSinceLastTraveler);
-		
+
 		tag.putByte(CONNECTION_STATE, connectionState.byteValue());
+
+		// ADD THIS LINE:
+		tag.putString(VARIANT, variant == null ? StargateJourney.EMPTY : variant.toString());
+
 		if(blockCover.isDirty())
 		{
 			tag.put(COVER_BLOCKS, blockCover.serializeNBT(registries));
 			blockCover.setDirty(false);
 		}
-		
+
 		return tag;
 	}
-	
+
 	@Override
 	public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket packet, HolderLookup.Provider registries)
 	{
 		CompoundTag tag = packet.getTag();
-		
+
 		ENERGY_STORAGE.setEnergy(tag.getLong(ENERGY));
-		
+
 		address.fromArray(tag.getIntArray(ADDRESS));
 		engagedChevrons = tag.getIntArray(ENGAGED_CHEVRONS);
-		
-		variant = ResourceLocation.tryParse(tag.getString(VARIANT));
-		// Ticks
+
+		// ADD THIS LINE:
+		if(tag.contains(VARIANT))
+			variant = ResourceLocation.tryParse(tag.getString(VARIANT));
+
 		kawooshTick = tag.getInt(StargateConnection.KAWOOSH_TICKS);
 		openTime = tag.getInt(StargateConnection.OPEN_TIME);
 		timeSinceLastTraveler = tag.getInt(StargateConnection.TIME_SINCE_LAST_TRAVELER);
-		
+
 		connectionState = StargateConnection.State.fromByte(tag.getByte(CONNECTION_STATE));
 		if(tag.contains(COVER_BLOCKS))
 			blockCover.deserializeNBT(registries, tag.getCompound(COVER_BLOCKS));
@@ -1646,4 +1651,6 @@ public abstract class AbstractStargateEntity extends EnergyBlockEntity implement
 		
 		return true;
 	}
+
+
 }
