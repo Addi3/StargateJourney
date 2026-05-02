@@ -1,5 +1,5 @@
 {
-	"variants": 
+	"variants":
 	{
 	"facing=north": { "model": "sgjourney:block/ring_panel" },
 	"facing=south": { "model": "sgjourney:block/ring_panel", "y": 180 },
