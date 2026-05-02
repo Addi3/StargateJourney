@@ -83,13 +83,9 @@ public class FirePitBlock extends Block
 	      return this.defaultBlockState().setValue(LIT, false);
 	}
 	
-	private static final VoxelShape BOTTOM = Block.box(5.0D, 0.0D, 5.0D, 11.0D, 1.0D, 11.0D);
-	private static final VoxelShape SIDE_1 = Block.box(4.0D, 1.0D, 5.0D, 5.0D, 2.0D, 11.0D);
-	private static final VoxelShape SIDE_2 = Block.box(11.0D, 1.0D, 5.0D, 12.0D, 2.0D, 11.0D);
-	private static final VoxelShape SIDE_3 = Block.box(5.0D, 1.0D, 4.0D, 11.0D, 2.0D, 5.0D);
-	private static final VoxelShape SIDE_4 = Block.box(5.0D, 1.0D, 11.0D, 11.0D, 2.0D, 12.0D);
+	private static final VoxelShape SHAPE = Block.box(2, 0, 2, 14, 4, 14);
 	
-	private static final VoxelShape FIRE_PIT = Shapes.or(BOTTOM, SIDE_1, SIDE_2, SIDE_3, SIDE_4);
+	private static final VoxelShape FIRE_PIT = Shapes.or(SHAPE);
 
 	@Override
 	public boolean propagatesSkylightDown(BlockState state, BlockGetter reader, BlockPos pos) 

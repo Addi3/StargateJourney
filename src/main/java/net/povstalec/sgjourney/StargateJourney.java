@@ -310,6 +310,7 @@ public class StargateJourney
             ItemBlockRenderTypes.setRenderLayer(FluidInit.LIQUID_NAQUADAH_FLOWING.get(), RenderType.translucent());
             ItemBlockRenderTypes.setRenderLayer(FluidInit.HEAVY_LIQUID_NAQUADAH_SOURCE.get(), RenderType.translucent());
             ItemBlockRenderTypes.setRenderLayer(FluidInit.HEAVY_LIQUID_NAQUADAH_FLOWING.get(), RenderType.translucent());
+            ItemBlockRenderTypes.setRenderLayer(BlockInit.FIRE_PIT.get(), RenderType.cutout());
 
             EntityRenderers.register(EntityInit.JAFFA_PLASMA.get(), PlasmaProjectileRenderer::new);
             EntityRenderers.register(EntityInit.GOAULD.get(), GoauldRenderer::new);
