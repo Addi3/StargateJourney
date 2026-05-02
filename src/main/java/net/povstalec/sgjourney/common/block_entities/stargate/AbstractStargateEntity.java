@@ -338,8 +338,7 @@ public abstract class AbstractStargateEntity extends EnergyBlockEntity implement
 		
 		tag.put(COVER_BLOCKS, blockCover.serializeNBT(registries));
 		
-		/*tag.putShort(SHIELD_PROGRESS, shieldProgress);
-		tag.put(SHIELD_INVENTORY, shieldItemHandler.serializeNBT());*/
+
 		
 		super.saveAdditional(tag, registries);
 		
@@ -367,7 +366,6 @@ public abstract class AbstractStargateEntity extends EnergyBlockEntity implement
 
 		tag.putByte(CONNECTION_STATE, connectionState.byteValue());
 
-		// ADD THIS LINE:
 		tag.putString(VARIANT, variant == null ? StargateJourney.EMPTY : variant.toString());
 
 		if(blockCover.isDirty())
@@ -389,7 +387,6 @@ public abstract class AbstractStargateEntity extends EnergyBlockEntity implement
 		address.fromArray(tag.getIntArray(ADDRESS));
 		engagedChevrons = tag.getIntArray(ENGAGED_CHEVRONS);
 
-		// ADD THIS LINE:
 		if(tag.contains(VARIANT))
 			variant = ResourceLocation.tryParse(tag.getString(VARIANT));
 
