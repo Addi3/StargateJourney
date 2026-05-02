@@ -1,10 +1,10 @@
 {
 	"variants":
 	{
-		"facing=north": { "model": "minecraft:block/air"},
-		"facing=south": { "model": "minecraft:block/air", "y": 180 },
-		"facing=west": { "model": "minecraft:block/air", "y": 270 },
-		"facing=east": { "model": "minecraft:block/air", "y": 90 }
+		"facing=north": { "model": "sgjourney:block/pegasus_dhd"},
+		"facing=south": { "model": "sgjourney:block/pegasus_dhd", "y": 180 },
+		"facing=west": { "model": "sgjourney:block/pegasus_dhd", "y": 270 },
+		"facing=east": { "model": "sgjourney:block/pegasus_dhd", "y": 90 }
 	}
 }
 

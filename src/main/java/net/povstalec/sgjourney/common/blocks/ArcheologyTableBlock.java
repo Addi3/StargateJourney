@@ -22,13 +22,9 @@ public class ArcheologyTableBlock extends DirectionalBlock
 {
 	public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 	
-	private static final VoxelShape TOP = Block.box(0.0D, 14.0D, 0.0D, 16.0D, 16.0D, 16.0D);
-	private static final VoxelShape LEG_1 = Block.box(1.0D, 0.0D, 1.0D, 3.0D, 14.0D, 3.0D);
-	private static final VoxelShape LEG_2 = Block.box(13.0D, 0.0D, 1.0D, 15.0D, 14.0D, 3.0D);
-	private static final VoxelShape LEG_3 = Block.box(1.0D, 0.0D, 13.0D, 3.0D, 14.0D, 15.0D);
-	private static final VoxelShape LEG_4 = Block.box(13.0D, 0.0D, 13.0D, 15.0D, 14.0D, 15.0D);
+	private static final VoxelShape TOP = Block.box(0, 0, 0, 16, 16, 16);
 	
-	private static final VoxelShape TABLE = Shapes.or(TOP, LEG_1, LEG_2, LEG_3, LEG_4);
+	private static final VoxelShape TABLE = Shapes.or(TOP);
 
 	public static final MapCodec<ArcheologyTableBlock> CODEC = simpleCodec(ArcheologyTableBlock::new);
 	

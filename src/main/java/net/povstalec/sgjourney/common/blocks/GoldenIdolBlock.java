@@ -16,16 +16,10 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class GoldenIdolBlock extends HorizontalDirectionalBlock
 {
-	private static final VoxelShape ARTIFACT_HEAD = Block.box(6.0D, 12.0D, 6.0D, 10.0D, 16.0D, 10.0D);
-	private static final VoxelShape ARTIFACT_BODY_1 = Block.box(6.0D, 0.0D, 7.0D, 10.0D, 12.0D, 9.0D);
-	private static final VoxelShape ARTIFACT_BODY_2 = Block.box(7.0D, 0.0D, 6.0D, 9.0D, 12.0D, 10.0D);
-	private static final VoxelShape RIGHT_HAND_1 = Block.box(4.0D, 6.0D, 7.0D, 6.0D, 12.0D, 9.0D);
-	private static final VoxelShape LEFT_HAND_1 = Block.box(10.0D, 6.0D, 7.0D, 12.0D, 12.0D, 9.0D);
-	private static final VoxelShape RIGHT_HAND_2 = Block.box(7.0D, 6.0D, 4.0D, 9.0D, 12.0D, 6.0D);
-	private static final VoxelShape LEFT_HAND_2 = Block.box(7.0D, 6.0D, 10.0D, 9.0D, 12.0D, 12.0D);
+	private static final VoxelShape ARTIFACT_HEAD = Block.box(4, 0, 4, 12, 16, 12);
 	
-	private static final VoxelShape ARTIFACT_STRAIGHT = Shapes.or(ARTIFACT_HEAD, ARTIFACT_BODY_1, RIGHT_HAND_1, LEFT_HAND_1);
-	private static final VoxelShape ARTIFACT_TURNED = Shapes.or(ARTIFACT_HEAD, ARTIFACT_BODY_2, RIGHT_HAND_2, LEFT_HAND_2);
+	private static final VoxelShape ARTIFACT_STRAIGHT = Shapes.or(ARTIFACT_HEAD);
+	private static final VoxelShape ARTIFACT_TURNED = Shapes.or(ARTIFACT_HEAD);
 
 	public static final MapCodec<GoldenIdolBlock> CODEC = simpleCodec(GoldenIdolBlock::new);
 
